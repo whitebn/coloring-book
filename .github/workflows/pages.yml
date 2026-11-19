@@ -1,0 +1,55 @@
+# Publishes the app to GitHub Pages whenever changes land on main.
+# One-time setup: repo Settings > Pages > Build and deployment > Source: "GitHub Actions".
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run unit tests
+        run: npm test
+
+      # Publish only the files the app needs, not the tests, server or README.
+      - name: Assemble the site
+        run: |
+          mkdir _site
+          cp -r index.html styles.css manifest.webmanifest sw.js js lib icons _site/
+
+      # The offline worker lists the files it saves. If one is missing from the site the install fails, so check.
+      - name: Check every file the offline worker lists is in the site
+        run: |
+          node -e "
+            const fs = require('fs');
+            const src = fs.readFileSync('sw.js', 'utf8');
+            const list = src.slice(src.indexOf('const ASSETS = ['), src.indexOf('];', src.indexOf('const ASSETS = [')));
+            const files = [...list.matchAll(/'([^']+)'/g)].map((m) => m[1]).filter((f) => f !== './');
+            const missing = files.filter((f) => !fs.existsSync('_site/' + f));
+            console.log('offline worker lists ' + files.length + ' files');
+            if (missing.length) { console.error('MISSING from the site: ' + missing.join(', ')); process.exit(1); }
+          "
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4

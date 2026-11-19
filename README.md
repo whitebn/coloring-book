@@ -40,7 +40,6 @@ Nothing moves the page until a finger has traveled about 48 pixels sideways, so 
 You need [Node.js](https://nodejs.org). It was tested on version 22, and there is nothing else to install.
 
 ```sh
-cd coloring-book
 node server.js
 ```
 
@@ -48,7 +47,7 @@ Open <http://localhost:8080>. The app must be served over http, so opening `inde
 
 ### Use it on a tablet or phone
 
-Browsers only allow offline mode and "Add to Home Screen" on **HTTPS** (or `localhost`). A `http://192.168.x.x` address on your home network will let you try the app, but it will not install or work offline. To really put it on a tablet, host the `coloring-book` folder on any static host with HTTPS, for example GitHub Pages, Netlify or Cloudflare Pages. It is just static files, so there is no build step. Then open the address on the tablet and choose **Add to Home Screen** (Safari: Share, then Add to Home Screen. Chrome: menu, then Install app).
+Browsers only allow offline mode and "Add to Home Screen" on **HTTPS** (or `localhost`). A `http://192.168.x.x` address on your home network will let you try the app, but it will not install or work offline. To really put it on a tablet, host these files on any static host with HTTPS, for example GitHub Pages, Netlify or Cloudflare Pages. It is just static files, so there is no build step. Then open the address on the tablet and choose **Add to Home Screen** (Safari: Share, then Add to Home Screen. Chrome: menu, then Install app).
 
 Installing it to the home screen is also the best way to use it with a toddler, because it opens full screen with no browser bars to tap by accident.
 
@@ -137,7 +136,11 @@ PDF rendering by [pdf.js](https://github.com/mozilla/pdf.js) from Mozilla, inclu
 
 ## Publish with GitHub Pages
 
-The workflow in `.github/workflows/coloring-book-pages.yml` publishes this folder whenever changes to it land on the repo's default branch. One-time setup: in the repo go to **Settings, Pages, Build and deployment** and set **Source** to **GitHub Actions**. The address will be `https://<your-user>.github.io/<repo-name>/`. You can also run it by hand from the **Actions** tab.
+The workflow in `.github/workflows/pages.yml` publishes the app whenever changes land on the `main` branch. It runs the unit tests, copies only the files the app needs into a `_site` folder, checks that every file the offline worker lists is there, and deploys it.
+
+One-time setup: in this repository go to **Settings, Pages, Build and deployment** and set **Source** to **GitHub Actions**. The address will be `https://<your-user>.github.io/<this-repository-name>/`. You can also run it by hand from the **Actions** tab.
+
+Pages sites for the same user share one browser origin (`<your-user>.github.io`). Saved books and colors are stored per origin, so a second app published under the same user can see this app's saved data, and this app can see theirs. Nothing sensitive is stored, but keep it in mind.
 
 ### Updating an installed copy
 
